@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ナイスゥーピクロス</title>
+
+<style>
+body{
+  font-family:sans-serif;
+  text-align:center;
+}
+
+.wrapper{
+  display:flex;
+  justify-content:center;
+  margin-top:10px;
+}
+
+.grid{
+  display:grid;
+  grid-template-columns:repeat(25, 18px);
+  gap:1px;
+}
+
+.cell{
+  width:18px;
+  height:18px;
+  background:#eee;
+  border:1px solid #bbb;
+}
+
+.filled{ background:#000; }
+.mark{ background:#fbb; }
+
+.hints-row{
+  display:flex;
+  justify-content:center;
+  font-size:10px;
+  margin-left:60px;
+}
+
+.hints-col{
+  display:flex;
+  flex-direction:column;
+  justify-content:flex-start;
+  margin-right:5px;
+  font-size:10px;
+}
+
+.hint{
+  height:18px;
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+}
+
+.controls{
+  margin:10px;
+}
+
+button{
+  padding:8px 12px;
+  margin:5px;
+}
+
+#message{
+  font-size:24px;
+  color:green;
+  margin-top:10px;
+}
+</style>
+</head>
+
+<body>
+
+<h2>🧩 ナイスゥーピクロス</h2>
+
+<div class="controls">
+<button onclick="mode='fill'">塗るモード</button>
+<button onclick="mode='mark'">×モード</button>
+</div>
+
+<div class="hints-row" id="topHints"></div>
+
+<div class="wrapper">
+  <div class="hints-col" id="leftHints"></div>
+  <div class="grid" id="grid"></div>
+</div>
+
+<div id="message"></div>
+
+<script>
+const SIZE = 25;
+let mode = "fill";
+
+// 🎯 ナイスゥー
+const solution = [
+"0000000000000000000000000",
+"0011100011110011110000000",
+"0010100010010010010000000",
+"0011100011110011110000000",
+"0010000010010010010000000",
+"0010000010010011110000000",
+"0000000000000000000000000",
+"0011100011110011110000000",
+"0010100010010010010000000",
+"0011100011110011110000000",
+"0000000000000000000000000",
+"0011100010010011110000000",
+"0010100010010010010000000",
+"0011100011110011110000000",
+"0000000000000000000000000",
+"0011100011110011110000000",
+"0010100010010010010000000",
+"0011100011110011110000000",
+"0000000000000000000000000",
+"0011100011110011110000000",
+"0010100010010010010000000",
+"0011100011110011110000000",
+"0000000000000000000000000",
+"0000000000000000000000000",
+"0000000000000000000000000"
+].map(r=>r.split("").map(Number));
+
+// ヒント生成
+function getHints(line){
+  let res=[],count=0;
+  for(let v of line){
+    if(v===1) count++;
+    else if(count){res.push(count);count=0;}
+  }
+  if(count) res.push(count);
+  return res.length?res:["0"];
+}
+
+// ヒント表示
+const topHints=document.getElementById("topHints");
+for(let c=0;c<SIZE;c++){
+  let col=solution.map(r=>r[c]);
+  let hints=getHints(col);
+  let div=document.createElement("div");
+  div.style.width="18px";
+  div.innerHTML=hints.join("<br>");
+  topHints.appendChild(div);
+}
+
+const leftHints=document.getElementById("leftHints");
+for(let r=0;r<SIZE;r++){
+  let div=document.createElement("div");
+  div.className="hint";
+  div.innerText=getHints(solution[r]).join(" ");
+  leftHints.appendChild(div);
+}
+
+// グリッド
+const grid=document.getElementById("grid");
+let cells=[];
+let isDragging=false;
+
+for(let r=0;r<SIZE;r++){
+  cells[r]=[];
+  for(let c=0;c<SIZE;c++){
+    const cell=document.createElement("div");
+    cell.className="cell";
+
+    const apply=()=>{
+      if(mode==="fill"){
+        cell.classList.add("filled");
+        cell.classList.remove("mark");
+      }else{
+        cell.classList.add("mark");
+        cell.classList.remove("filled");
+      }
+    };
+
+    cell.onmousedown=()=>{isDragging=true; apply(); check();}
+    cell.onmouseover=()=>{if(isDragging){apply(); check();}}
+
+    cell.ontouchstart=(e)=>{
+      apply();
+      check();
+    }
+
+    grid.appendChild(cell);
+    cells[r][c]=cell;
+  }
+}
+
+document.body.onmouseup=()=>isDragging=false;
+
+// 判定
+function check(){
+  for(let r=0;r<SIZE;r++){
+    for(let c=0;c<SIZE;c++){
+      let filled=cells[r][c].classList.contains("filled");
+      if(filled !== (solution[r][c]===1)){
+        return;
+      }
+    }
+  }
+  document.getElementById("message").innerText="ナイスゥー✨🎉";
+}
+</script>
+
+</body>
+</html>
